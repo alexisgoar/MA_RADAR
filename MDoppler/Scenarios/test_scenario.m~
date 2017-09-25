@@ -1,0 +1,11 @@
+addpath ../Classes/
+
+test = target; 
+test.x = 0; 
+test.y = 0; 
+test.z = 0; 
+
+test2 = target(1,2,3,4,5,6); 
+test2
+
+move(
