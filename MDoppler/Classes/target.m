@@ -33,6 +33,9 @@ classdef target   < handle
             obj.y = obj.y + obj.vy*time;
             obj.z = obj.z + obj.vz*time;
         end
+        function plot(obj)
+            plot(obj.x,obj.y,'b*'); 
+        end
     end
     
 end 

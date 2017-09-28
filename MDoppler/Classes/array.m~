@@ -6,8 +6,6 @@ classdef array < handle
         z
     end
     properties (Constant)
-        frequency = 9.25e9;
-        c = 299792458;
         %For now only arrays directed in x are enabled
         %To enable other directions complete the get functions of
         %xE, yE, zE 
@@ -16,7 +14,6 @@ classdef array < handle
     properties (Dependent) 
         lambda; 
         spacingofElements;
-        %Arrays containing location of each individual element
         xE;
         yE; 
         zE; 
