@@ -16,8 +16,8 @@ classdef rxarray < array
             end
             obj@array(args{:});
         end
-        function plot(obj)
-            plot(obj.xE,obj.yE,'r*');
+        function h = plot(obj)
+            h = plot(obj.xE,obj.yE,'r*');
         end
     end
 end

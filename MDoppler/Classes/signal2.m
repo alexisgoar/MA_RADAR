@@ -1,4 +1,6 @@
-classdef signal < handle
+% Extension class of the original signal class to allow for multiple
+% targets
+classdef signal2 < handle
     properties 
         % transmit array class
         tx 
@@ -13,10 +15,14 @@ classdef signal < handle
     end
     methods
         % constructor function
-        function obj = signal(txarray,rxarray,target)
+        function obj = signal2(txarray,rxarray,varargin)
             obj.tx = txarray; 
             obj.rx = rxarray; 
-            obj.target = target; 
+
+            for i = 1:size(varargin,2)
+                 target_array(i) = varargin{i}; 
+            end
+            obj.target = target_array; 
         end
         % get function of deltaT 
         function deltaT = get.deltaT(obj)
@@ -32,13 +38,15 @@ classdef signal < handle
             end
         end
         % Plots the setup
-        function h=plot_setup(obj)
+        function plot_setup(obj)
             figure;
             hold on;
             plot(obj.tx); 
             plot(obj.rx); 
-            plot(obj.target); 
-            
+            size(obj.target,2);
+            for i  = 1:size(obj.target,2)
+                plot(obj.target(i));
+            end
         end
         % calculates the received signal after mixing it with a local
         % copy of the singal 
