@@ -35,7 +35,7 @@ classdef target   < handle
         end
         % function to plot the target
         function h = plot(obj)
-            h = plot(obj.x,obj.y,'b*'); 
+            h = plot(obj.x,obj.y,'b*');
         end
         % function to plot the target per time 
         function animate(obj,tstep,tstart,tend,rx,tx)
