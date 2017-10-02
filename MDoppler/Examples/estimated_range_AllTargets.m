@@ -5,7 +5,7 @@ addpath(genpath( '../Functions/'));
 target1 = target(0,20,0); 
 target2 = target(0,40,0); 
 target3 = target(0,60,0); 
-target4 = target(0,100,0); 
+target4 = target(0,70,0); 
  
 rx = rxarray(4,0,0,0);
 tx = txarray(2,0.1053,0,0); 

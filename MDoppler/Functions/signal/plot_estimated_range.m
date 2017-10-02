@@ -8,9 +8,10 @@ time = 0:obj.tx.tchirp/samplesperChirp:obj.tx.tchirp*numberofChirps;
 for i = 1:size(time,2)
     s = receivedSignal(obj,time,txi,rxi,targeti);
 end
+
 N=size(time,2);
 freq =0:1/(obj.tx.samplingRate*N):(N-1)/(N*obj.tx.samplingRate);
-R = obj.tx.c*freq/(obj.tx.k);
+R = obj.tx.c*freq/(obj.tx.k*2);
 sfd = fft(s);
 h = plot(R,abs(sfd));
 end

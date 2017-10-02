@@ -11,10 +11,7 @@ classdef signal2 < handle
         % target: to be extended to multiple targets
         target
     end
-    properties (Dependent)
-        % timepath from all of the tx to the target and back to rx
-        deltaT
-    end
+
     methods
         % constructor function
         function obj = signal2(txarray,rxarray,varargin)
@@ -27,29 +24,23 @@ classdef signal2 < handle
             
         end
         % get function of deltaT 
-        function deltaT = get.deltaT(obj)
-            txN = obj.tx.numberofElements;
-            rxN = obj.rx.numberofElements;
-            targetN = size(obj.target,2);
-            deltaT = zeros(txN,rxN,targetN);
-            for i = 1:txN
-                for j = 1:rxN
-                    for k = 1:targetN
-                        deltaX = obj.rx.xE(j) - obj.target(k).x - obj.tx.xE(i);
-                        deltaY = obj.rx.yE(j) - obj.target(k).y - obj.tx.yE(i);
-                        deltaZ = obj.rx.zE(j) - obj.target(k).z - obj.tx.zE(i);
-                        delta = [deltaX,deltaY,deltaZ];
-                        deltaT(i,j,k) = norm(delta)/obj.tx.c;
-                    end
-                end
-            end
+        function deltaT = deltaT(obj,txi,rxj,k)
+            
+            deltaX = obj.target(k).x-obj.rx.xE(rxj)+...
+                obj.target(k).x - obj.tx.xE(txi);
+            deltaY = obj.target(k).y-obj.rx.yE(rxj)+...
+                obj.target(k).y - obj.tx.yE(txi);
+            deltaZ = obj.target(k).z-obj.rx.zE(rxj)+...
+                obj.target(k).z - obj.tx.zE(txi);
+            delta = [deltaX,deltaY,deltaZ];
+            deltaT = norm(delta)/(obj.tx.c);
         end
 
         % calculates the received signal after mixing it with a local
         % copy of the singal  for a single target
         function s = receivedSignal(obj,t,txi,rxi,targeti)
             t1 = 2*pi*obj.tx.k*obj.deltaT(txi,rxi,targeti)*t;
-            t2 = -pi*obj.tx.k*obj.deltaT(txi,rxi,targeti)^2;
+            t2 = -pi*obj.tx.k*(obj.deltaT(txi,rxi,targeti)^2);
             t3 = 2*pi*obj.tx.frequency*obj.deltaT(txi,rxi,targeti);
             s = exp(1i*(t1+t2+t3)); 
         end
@@ -71,6 +62,15 @@ classdef signal2 < handle
             t3 = 2*pi*obj.tx.frequency*delay;
             s = exp(1i*(t1+t2+t3))*flag;
         end 
+       
+        % Functions used to calculate the Azimuth Range
+        
+        function s = steeringVector(obj,theta,txi,rxi)
+           x_tx = [obj.tx.xE(txi),obj.tx.yE(txi),obj.tx.zE(txi)]; 
+           x_rx = [obj.rx.xE(rxi),obj.rx.yE(rxi),obj.rx.zE(rxi)]; 
+           xij = norm((x_tx+x_rx)/2); 
+           s = exp(1i*4*pi*xij*sin(theta)/obj.tx.lambda);  
+        end
 
 
     end
