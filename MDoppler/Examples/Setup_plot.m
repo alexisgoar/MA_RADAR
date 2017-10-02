@@ -1,4 +1,5 @@
 addpath ../Classes/
+addpath(genpath( '../Functions/')); 
 % Example: The definition of targets, rxarray and txarray
 % All of the previous are to be linked in a signal class 
 
@@ -15,7 +16,7 @@ target3 = target(-1, 50,0);
 signal = signal2(tx,rx,target1,target2,target3); 
 
 %plot everything
-signal.plot_setup(); 
+plot_setup(signal); 
 
 
 

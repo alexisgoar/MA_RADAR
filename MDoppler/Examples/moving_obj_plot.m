@@ -1,4 +1,5 @@
 addpath ../Classes/
+addpath(genpath( '../Functions/')); 
 % Example: animate a moving target
 % Tx and Rx Definitions
 rx = rxarray(4,0,0,0);
@@ -9,4 +10,4 @@ target3 = target(-2, 50,0,1,0,0);
 figure; 
 axis([-2,2,0,70]); 
 set(0,'DefaultFigureWindowStyle','normal');
-target3.animate(0.01,0,2,rx,tx); 
+animate(target3,0.01,0,2,rx,tx); 

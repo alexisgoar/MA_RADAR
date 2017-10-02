@@ -44,18 +44,7 @@ classdef signal2 < handle
                 end
             end
         end
-        % Plots the setup
-        function plot_setup(obj)
-            figure;
-            set(0,'DefaultFigureWindowStyle','docked');
-            hold on;
-            plot(obj.tx); 
-            plot(obj.rx); 
-            size(obj.target,2);
-            for i  = 1:size(obj.target,2)
-                plot(obj.target(i));
-            end
-        end
+
         % calculates the received signal after mixing it with a local
         % copy of the singal  for a single target
         function s = receivedSignal(obj,t,txi,rxi,targeti)
@@ -64,43 +53,26 @@ classdef signal2 < handle
             t3 = 2*pi*obj.tx.frequency*obj.deltaT(txi,rxi,targeti);
             s = exp(1i*(t1+t2+t3)); 
         end
-        % plots the estimated range base on the received signal after
-        % applying an FFT for transimeter txi and receiver rxi
-        % for a single target
-        function h = plot_estimated_range(obj,txi,rxi,targeti)
-            numberofChirps = 1; 
-            samplesperChirp = obj.tx.tchirp/obj.tx.samplingRate; 
-            time = 0:obj.tx.tchirp/samplesperChirp:obj.tx.tchirp*numberofChirps;
-            for i = 1:size(time,2)
-                s = receivedSignal(obj,time,txi,rxi,targeti); 
-            end
-            N=size(time,2);
-            freq =0:1/(obj.tx.samplingRate*N):(N-1)/(N*obj.tx.samplingRate); 
-            R = obj.tx.c*freq/(obj.tx.k); 
-            sfd = fft(s);
-            h = plot(R,abs(sfd)); 
+        %Calculates the frequency of the received signal considering all
+        %delays 
+        function s = rxSignal(obj,time,txi,rxi,targeti)
+            delay = obj.deltaT(txi,rxi,targeti);  
+            time = time-delay; 
+            s = obj.tx.txSignal(txi,time);
         end
-        %plots the estimated range for all possible paths 
-        % for a single target
-        function plot_estimated_ranges(obj,targeti)
-            figure;
-            set(0,'DefaultFigureWindowStyle','docked');
-            hold on; 
-            %  subplot(obj.tx.numberofElements*obj.rx.numberofElements,1,1);
-            txn = obj.tx.numberofElements;
-            rxn = obj.rx.numberofElements;
-            for i = 1:txn
-                for j = 1:rxn
-                    h = subplot(rxn,txn,i+(j-1)*txn);
-                    obj.plot_estimated_range(i,j,targeti);
-                    Txnum = ['Tx ',num2str(i)];
-                    Rxnum = [' Rx ',num2str(j)]; 
-                    title([Txnum,Rxnum]); 
-                    set(gca,'ytick',[]);
-                    set(gca,'yticklabel',[]);                
-                end
-            end
-        end
+        % Function to calculate the complete received signal for a static
+        % scatterer 
+        function s = rxSignal2(obj,time,txi,rxi,targeti)
+            delay = obj.deltaT(txi,rxi,targeti);
+            time = time-delay;
+            flag = obj.tx.tx_flags(time,txi); 
+            t1 = 2*pi*obj.tx.k*delay*time;
+            t2 = -pi*obj.tx.k*delay^2;
+            t3 = 2*pi*obj.tx.frequency*delay;
+            s = exp(1i*(t1+t2+t3))*flag;
+        end 
+
+
     end
     
     
