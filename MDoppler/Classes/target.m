@@ -37,6 +37,12 @@ classdef target   < handle
         function h = plot(obj)
             h = plot(obj.x,obj.y,'b*');
         end
+        % it is assumed that the radar is located at the origin
+        function vr = rangerate(obj)
+           t1 = obj.x*obj.vx+obj.y*obj.vy+obj.z*obj.vz; 
+           t2 = sqrt(obj.x^2+obj.y^2+obj.z^2); 
+           vr = t1/t2; 
+        end
 
     end
 end 

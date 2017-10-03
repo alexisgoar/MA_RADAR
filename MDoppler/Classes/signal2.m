@@ -62,6 +62,22 @@ classdef signal2 < handle
             t3 = 2*pi*obj.tx.frequency*delay;
             s = exp(1i*(t1+t2+t3))*flag;
         end 
+        % Function to calculate the received signal for a dynamic scatterer
+        function s = rxSignal3(obj,time,txi,rxi,targeti)            
+            % Doppler Frequency
+            vr = obj.target(targeti).rangerate();
+            fd = 2*vr/obj.tx.lambda;
+            
+            delay = obj.deltaT(txi,rxi,targeti);
+            time = time-delay;
+            flag = obj.tx.tx_flags(time,txi);
+            t1 = 2*pi*obj.tx.k*delay*time;
+            t2 = -pi*obj.tx.k*delay^2;
+            t3 = 2*pi*(obj.tx.frequency-fd)*delay;
+            t4 = 2*pi*fd*time; 
+
+            s = exp(1i*(t1+t2+t3+t4))*flag;
+        end
        
         % Functions used to calculate the Azimuth Range
         
@@ -70,6 +86,13 @@ classdef signal2 < handle
            x_rx = [obj.rx.xE(rxi),obj.rx.yE(rxi),obj.rx.zE(rxi)]; 
            xij = norm((x_tx+x_rx)/2); 
            s = exp(1i*4*pi*xij*sin(theta)/obj.tx.lambda);  
+        end
+        
+        % Functions used to calculate Range rate
+        
+        function s = rangerateEstimator(obj,range_rate)
+           arg = 4*pi*range_rate/obj.tx.lambda; 
+           s = exp(-1i*arg); 
         end
 
 
