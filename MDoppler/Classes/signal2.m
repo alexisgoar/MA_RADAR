@@ -35,6 +35,15 @@ classdef signal2 < handle
             delta = [deltaX,deltaY,deltaZ];
             deltaT = norm(delta)/(obj.tx.c);
         end
+        
+        % General next time function
+        function nextTimeStep(obj)
+            obj.tx.nextStep_sampling(); 
+            targetn = size(obj.target,2);
+            for targeti = 1:targetn
+               obj.target(targeti).move(obj.tx.samplingRate);  
+            end
+        end
 
         % calculates the received signal after mixing it with a local
         % copy of the singal  for a single target
@@ -66,15 +75,15 @@ classdef signal2 < handle
         function s = rxSignal3(obj,time,txi,rxi,targeti)            
             % Doppler Frequency
             vr = obj.target(targeti).rangerate();
-            fd = 2*vr/obj.tx.lambda;
+            fd = -2*vr/obj.tx.lambda;
             
             delay = obj.deltaT(txi,rxi,targeti);
             time = time-delay;
             flag = obj.tx.tx_flags(time,txi);
             t1 = 2*pi*obj.tx.k*delay*time;
             t2 = -pi*obj.tx.k*delay^2;
-            t3 = 2*pi*(obj.tx.frequency-fd)*delay;
-            t4 = 2*pi*fd*time; 
+            t3 = 2*pi*(obj.tx.frequency+fd)*delay;
+            t4 = -2*pi*fd*time; 
 
             s = exp(1i*(t1+t2+t3+t4))*flag;
         end

@@ -9,7 +9,7 @@ classdef txarray < array
     properties (Constant)
         tchirp = 135e-6; %s chirp duration
         B = 100e6; %Hz chirp sweeping bandwith 
-        samplingRate = (2.5e-6); 
+        samplingRate = (2.5e-6); %s
         %TIme keeping variables
         t0 = 0 ;    
     end
