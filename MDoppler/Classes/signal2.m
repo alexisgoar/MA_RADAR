@@ -35,6 +35,19 @@ classdef signal2 < handle
             delta = [deltaX,deltaY,deltaZ];
             deltaT = norm(delta)/(obj.tx.c);
         end
+       
+        % Testing
+        function deltaT2 = deltaT2(obj,txi,rxj,k)
+            R = [obj.target(k).x,obj.target(k).y,obj.target(k).z]; 
+            xTx = [obj.tx.xE(txi),obj.tx.yE(txi),obj.tx.zE(txi)];  
+            xRx = [obj.rx.xE(rxj),obj.rx.yE(rxj),obj.tx.zE(rxj)]; 
+            xij = (xTx+xRx)/2; 
+            R = 2*(R-xij); 
+            R = norm(R); 
+            deltaT2 = R/(obj.tx.c); 
+            
+            
+        end
         
         % General next time function
         function nextTimeStep(obj)
@@ -83,7 +96,7 @@ classdef signal2 < handle
             t1 = 2*pi*obj.tx.k*delay*time;
             t2 = -pi*obj.tx.k*delay^2;
             t3 = 2*pi*(obj.tx.frequency+fd)*delay;
-            t4 = -2*pi*fd*time; 
+            t4 = -2*pi*fd*(time); 
 
             s = exp(1i*(t1+t2+t3+t4))*flag;
         end
