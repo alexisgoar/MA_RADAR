@@ -1,8 +1,8 @@
 function plot_azimuth_profile(obj,NPulses)
-txn = obj.tx.numberofElements; 
-rxn = obj.rx.numberofElements; 
+txn = obj.tx.numberofElements;
+rxn = obj.rx.numberofElements;
 
-theta =   [-60:5:60]*pi/180;
+theta =   [-60:1:60]*pi/180;
 for thetai = 1:size(theta,2)
     for txi = 1:txn
         for rxi = 1:rxn

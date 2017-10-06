@@ -1,6 +1,7 @@
 addpath ../Classes/
 addpath(genpath( '../Functions/')); 
 
+profile on 
 
 target1 = target(10,30,0); 
 target2 = target(40,40,0); 
@@ -15,5 +16,9 @@ signal = signal2(tx,rx,target1,target2,target3,target4);
 
 plot_setup(signal); 
 hold on; 
+
+
 plot_azimuth_profile(signal,3);
 
+profile viewer
+profile clear

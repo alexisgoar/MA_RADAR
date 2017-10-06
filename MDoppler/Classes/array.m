@@ -4,6 +4,12 @@ classdef array < handle
         x
         y
         z
+        lambda
+        spacingofElements
+        %Arrays containing location of each individual element
+        xE
+        yE
+        zE
     end
     properties (Constant)
         frequency = 9.25e9;
@@ -12,14 +18,6 @@ classdef array < handle
         %To enable other directions complete the get functions of
         %xE, yE, zE 
         direction = [1,0,0]; 
-    end
-    properties (Dependent) 
-        lambda; 
-        spacingofElements;
-        %Arrays containing location of each individual element
-        xE;
-        yE; 
-        zE; 
     end
     methods
         function obj = array(numberofElements,x,y,z) 
@@ -31,33 +29,26 @@ classdef array < handle
             elseif nargin == 4
                 obj.numberofElements = numberofElements;
                 obj.x = x; 
-                obj.y = y; 
-                obj.z = z; 
+                obj.y = y;
+                obj.z = z;
             else
-                error('Incorrect Number of Inputs');                
+                error('Incorrect Number of Inputs');
             end
-        end
-        function lambda  = get.lambda(obj)
-            lambda = obj.c/obj.frequency;
-        end
-        function spacingofElements = get.spacingofElements(obj)
-            spacingofElements = obj.lambda/2; 
-        end
-        function xE = get.xE(obj)
-            xE = zeros(obj.numberofElements,1);
+            
+            obj.lambda = obj.c/obj.frequency;
+            obj.spacingofElements = obj.lambda/2;
+            
+            obj.xE = zeros(obj.numberofElements,1);
             for i = 1:obj.numberofElements
-                xE(i) = i*obj.spacingofElements+obj.x;
+                obj.xE(i) = i*obj.spacingofElements+obj.x;
             end
-            xE = xE - (obj.numberofElements*obj.spacingofElements+...
+            obj.xE = obj.xE - (obj.numberofElements*obj.spacingofElements+...
                 obj.spacingofElements)/2;
+            
+            obj.yE = obj.y*ones(obj.numberofElements,1);
+            
+            obj.zE = obj.z*ones(obj.numberofElements,1);
+                        
         end
-        function yE = get.yE(obj)
-            yE = obj.y*ones(obj.numberofElements,1);
-        end
-        function zE = get.zE(obj)
-            zE = obj.z*ones(obj.numberofElements,1);
-        end
-        
-
     end
 end

@@ -2,7 +2,7 @@ addpath ../Classes/
 addpath(genpath( '../Functions/')); 
 % Example of the estimated range for all targets 
 %Definition of Setup
-target1 = target(0,20,0); 
+target1 = target(0,20.24,0); 
 target2 = target(0,40,0); 
 target3 = target(0,60,0); 
 target4 = target(0,70,0); 
@@ -20,4 +20,4 @@ plot_estimated_range2(signal,1,1,5);
 tx.resetTime(); 
 plot_estimated_range2(signal,1,1,10);
 tx.resetTime(); 
-plot_estimated_range2(signal,1,1,15); 
+plot_estimated_range2(signal,1,1,2); 

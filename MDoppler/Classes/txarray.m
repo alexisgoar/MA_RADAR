@@ -4,17 +4,17 @@ classdef txarray < array
         time; 
         t_current_chirp; 
         chirpi=1; %counter for chirps
-        gTimeStep =2.5e-6; %Time step used globally      
+        gTimeStep =2.5e-6; %Time step used globally    
+        k; 
+        samplingRate; %s (wrongly named) 
     end
     properties (Constant)
         tchirp = 135e-6; %s chirp duration
         B = 100e6; %Hz chirp sweeping bandwith 
-        samplingRate = 135e-6/54; %s
+        samplesPerChirp = 54; 
+
         %TIme keeping variables
         t0 = 0 ;    
-    end
-    properties (Dependent) 
-        k % Chirp rate 
     end
     methods
         function obj = txarray(numberofElements,x,y,z)
@@ -32,10 +32,12 @@ classdef txarray < array
             % Time keeping init
             obj.time = obj.t0;
             obj.t_current_chirp  = obj.t0;
+            % Calculate k 
+            obj.k = obj.B/obj.tchirp; 
+            obj.samplingRate = obj.tchirp/obj.samplesPerChirp; 
+            
         end
-        function k = get.k(obj)
-            k = obj.B/obj.tchirp; 
-        end
+
         function h =  plot(obj)
            h = plot(obj.xE,obj.yE,'k*');
         end
@@ -74,6 +76,8 @@ classdef txarray < array
             s = (obj.frequency + obj.k*(t_currentchirp-obj.tchirp/2+obj.t0))*flag; 
             end
         end
+        
+        % Turns the transmitter on and off (Very inefficient!!) 
         function [f,chirpid] = tx_flags(obj,time,txi)
             if time < obj.t0 
                 f =0; 
