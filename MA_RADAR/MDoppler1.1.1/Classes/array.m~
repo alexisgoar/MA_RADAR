@@ -1,0 +1,60 @@
+classdef array < handle
+    properties 
+        numberofElements
+        x
+        y
+        z
+    end
+    properties (Constant)
+        %For now only arrays directed in x are enabled
+        %To enable other directions complete the get functions of
+        %xE, yE, zE 
+        direction = [1,0,0]; 
+    end
+    properties (Dependent) 
+        lambda; 
+        spacingofElements;
+        xE;
+        yE; 
+        zE; 
+    end
+    methods
+        function obj = array(numberofElements,x,y,z) 
+            if nargin == 1
+                obj.numberofElements = numberofElements;
+                obj.x = 0; 
+                obj.y = 0; 
+                obj.z = 0; 
+            elseif nargin == 4
+                obj.numberofElements = numberofElements;
+                obj.x = x; 
+                obj.y = y; 
+                obj.z = z; 
+            else
+                error('Incorrect Number of Inputs');                
+            end
+        end
+        function lambda  = get.lambda(obj)
+            lambda = obj.c/obj.frequency;
+        end
+        function spacingofElements = get.spacingofElements(obj)
+            spacingofElements = obj.lambda/2; 
+        end
+        function xE = get.xE(obj)
+            xE = zeros(obj.numberofElements,1);
+            for i = 1:obj.numberofElements
+                xE(i) = i*obj.spacingofElements+obj.x;
+            end
+            xE = xE - (obj.numberofElements*obj.spacingofElements+...
+                obj.spacingofElements)/2;
+        end
+        function yE = get.yE(obj)
+            yE = obj.y*ones(obj.numberofElements,1);
+        end
+        function zE = get.zE(obj)
+            zE = obj.z*ones(obj.numberofElements,1);
+        end
+        
+
+    end
+end

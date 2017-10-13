@@ -1,0 +1,17 @@
+classdef rxarray < array
+    properties 
+        test
+    end
+    methods
+        function obj = rxarray(numberofElements,x,y,z)
+            if nargin == 1
+                args{1} =
+            elseif nargin == 4
+                
+            else
+                error('Incorrect number of inputs');
+            end
+            obj@array(args{:});
+        end
+    end
+end
