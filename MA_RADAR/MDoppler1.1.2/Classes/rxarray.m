@@ -5,11 +5,15 @@ classdef rxarray < array
         function obj = rxarray(numberofElements,x,y,z)
             if nargin == 1
                 args{1} =numberofElements;
+                %element spacing
+                args{2} = 0.5; 
             elseif nargin == 4
                 args{1} =numberofElements;
-                args{2} =x;
-                args{3} =y;
-                args{4} =z;
+                %element spacing
+                args{2} = 0.5; 
+                args{3} =x;
+                args{4} =y;
+                args{5} =z;
             else
                 error('Incorrect number of inputs');
             end
@@ -17,9 +21,9 @@ classdef rxarray < array
         end
         function h =  plot(obj,ax)
             if nargin == 1
-                h = plot(ax,obj.xE,obj.yE,'k*');
+                h = plot(obj.xE,obj.yE,'b*');
             else
-                h = plot(ax,obj.xE,obj.yE,'k*');
+                h = plot(ax,obj.xE,obj.yE,'b*');
             end
         end
     end

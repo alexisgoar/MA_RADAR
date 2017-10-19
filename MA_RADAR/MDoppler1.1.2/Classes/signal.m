@@ -24,7 +24,7 @@ classdef signal < handle
         % For Doppler Range
         NPulses = 120; 
         % Noise 
-        snr = 1; 
+        snr = 5; 
     end
 
     methods
@@ -148,7 +148,7 @@ classdef signal < handle
         %Assumes that the elements of both receiver and transmitter are the
         %same for the y and z components
         function sM = steeringVectorMatrix(obj,theta)
-           sM = exp(1i*4*pi*obj.x_ij*sin(theta)/obj.tx.lambda);  
+           sM = exp(-1i*4*pi*obj.x_ij*sin(theta)/obj.tx.lambda);  
         end
         %%%% TIME FUNCTIONS %%%%%%
         function update_deltaT(obj)

@@ -22,24 +22,29 @@ classdef array < handle
         c = 299792458;
     end
     methods
-        function obj = array(numberofElements,x,y,z)         
+        function obj = array(numberofElements,spacing,x,y,z)         
             % Init 
-            if nargin == 1
+            obj.lambda = obj.c/obj.frequency;
+            if nargin == 2
                 obj.numberofElements = numberofElements;
                 obj.x = 0; 
                 obj.y = 0; 
                 obj.z = 0; 
-            elseif nargin == 4
+                obj.spacingofElements = spacing*obj.lambda;
+                
+            elseif nargin == 5
                 obj.numberofElements = numberofElements;
                 obj.x = x; 
                 obj.y = y;
                 obj.z = z;
+                obj.spacingofElements = spacing*obj.lambda;
+               
             else
                 error('Incorrect Number of Inputs');
             end
             
-            obj.lambda = obj.c/obj.frequency;
-            obj.spacingofElements = obj.lambda/2;
+           
+
             
             % Calculation of individual element positions 
             obj.xE = zeros(obj.numberofElements,1);

@@ -16,3 +16,4 @@ for i  = 1:size(obj.target,2)
     plot(obj.target(i),ax);
 end
 end
+end

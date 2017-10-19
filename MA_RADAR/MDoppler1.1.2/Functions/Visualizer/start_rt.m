@@ -27,31 +27,31 @@ txt4 = uicontrol('Style','text',...
     'String',str4);
 f.Visible = 'on';
 
-%txN = obj.txN;
-txN = 2; 
-signalN = obj.Ns*txN;
-%NPulses = obj.NPulses; 
-NPulses =  120; 
+txN = obj.txN;
+
+signalN = obj.Ns;
+%NPulses = obj.NPulses;
+NPulses =  120;
 
 %to be done: Get this value automatically
-Ncycles = 500; 
+Ncycles = 500;
 s3 = zeros(NPulses,Ncycles);
-trueRange = obj.rangeData; 
+trueRange = obj.rangeData;
 
-targetsN = size(trueRange,3); 
+targetsN = size(trueRange,3);
 
 ax1 = axes('Position',[0.15 0.5 0.7 0.45]);
 hold on;
 
 ax2 = axes('Position',[0.15 0.05 0.33 0.35]);
-hold on; 
+hold on;
 
 ax3 = axes('Position',[0.52 0.05 0.33 0.35]);
-hold on; 
+hold on;
 t = 0;
-i = 1; 
+i = 1;
 [~,r,theta] = obj.rangeAzimuth(1);
-[~,r2,v] = obj.dopplerRange(1);
+[~,v_plot,r_plot] = obj.dopplerRange(1);
 
 while t <10000
     cla(ax1)
@@ -59,64 +59,88 @@ while t <10000
     cla(ax3)
     t01 =tic;
     s = obj.rangeAzimuth(i);
-    t1 = toc(t01); 
+    t1 = toc(t01);
     
-
+    
     current_time = obj.timeData(i*obj.Ns*NPulses*txN);
-                                    
-    t02 = tic; 
+    
+    t02 = tic;
     s2 = obj.dopplerRange(i);
-    t2 = toc(t02); 
-    temp = reshape(s2(1,1,:),signalN,NPulses);
+    t2 = toc(t02);
+    
+    index = [1:signalN];
+    index2 = [1:txN:NPulses*txN]'-1;
+    index3 = repmat(index2*signalN,1,signalN);
+    index4 = repmat(index,NPulses,1);
+    size(index3);
+    size(index4);
+    index_end = reshape((index3+index4)',1,signalN*NPulses);
+    size(s2(1,1,index_end));
+    temp = reshape(s2(1,1,index_end),signalN,NPulses);
     h = pcolor(ax1,r.*sin(theta),r.*cos(theta),abs(s));
-
+    
     for j = 1:targetsN
-
-       plot(ax1,trueRange(i*signalN*NPulses,1,j),trueRange(i*signalN*NPulses,2,j),...
-           'o','MarkerSize',5,'MarkerFaceColor','red','MarkerEdgeColor','black');
+        
+        plot(ax1,trueRange(i*signalN*NPulses*txN,1,j),trueRange(i*signalN*NPulses*txN,2,j),...
+            'o','MarkerSize',5,'MarkerFaceColor','red','MarkerEdgeColor','black');
     end
     view(0, 90)
     set(h,'edgecolor','none');
     axis(ax1,[-80 80    0  100])
     view(0, 90)
-    t03  = tic; 
-     temp2 = obj.dopplerOnly(i);
-     t3 = toc(t03); 
-    s3(:,i) = reshape(temp2(1,1,:),NPulses,1); 
+    t03  = tic;
+    temp2 = obj.dopplerOnly(i);
+    t3 = toc(t03);
+    s3(:,i) = reshape(temp2(1,1,:),NPulses,1);
     time_span = 0:obj.tc*NPulses*txN:...
-        obj.tc*NPulses*(Ncycles-1)*txN;     
-    [x,y] = meshgrid(time_span(1:1:end),r2(1,:));
-
+        obj.tc*NPulses*(Ncycles-1)*txN;
+    [x,y] = meshgrid(time_span(1:1:end),v_plot(1,:));
     
-
-    h3 = pcolor(ax3,x,y,abs(s3(:,1:1:end))); 
-        caxis([0,5000]); 
-        %pcolor(ax3,v,r2,abs(temp));
+    
+    h3 = pcolor(ax3,x,y,abs(s3(:,1:1:end)));
+    caxis([0,5000]);
+    %pcolor(ax3,v,r2,abs(temp));
     %axis(ax3,[-15  15 0 4])
-    %set(h3,'edgecolor','none'); 
     set(h3,'edgecolor','none');
+    %   set(h3,'edgecolor','none');
     
     
     
     
-    
-   
-    pcolor(ax2,v,r2,abs(temp));
+    pcolor(ax2,r_plot,v_plot,abs(temp));
     for j = 1:targetsN
-        range = sqrt(trueRange(i*signalN*NPulses,1,j)^2+trueRange(i*signalN*NPulses,2,j)^2);
-        plot(ax2,range,trueRange(i*signalN*NPulses,4,j),...
+        range = sqrt(trueRange(i*signalN*NPulses*txN,1,j)^2+trueRange(i*signalN*NPulses*txN,2,j)^2);
+        plot(ax2,range,trueRange(i*signalN*NPulses*txN,4,j),...
             'o','MarkerSize',5,'MarkerFaceColor','red','MarkerEdgeColor','black');
     end
     axis(ax2,[0 80  -15  15])
- 
+    
+%--------------------Detection------------------------------------------%
+    s_range = obj.ranging(i);
+    index = obj.detectRange(s_range);
+    [out] = obj.detectAzimuth(s,index);
+    
+    for j = 1:size(out,1)
+        rq = r(1,out(j,1));
+        az = theta(out(j,2),1);
 
+        plot(ax1,rq*sin(az),rq*cos(az),...
+            'o','MarkerSize',5,'MarkerFaceColor','white','MarkerEdgeColor','black');
+    end
+    
+    [out2] = obj.detectDoppler(temp,index); 
     
     
-   
-
-
-    pause(0.00000001); 
-
+    
+    for j = 1:size(out2,1)
+        rq = r(1,out2(j,1));
+        vq = v_plot(1,out2(j,2));
+        
+        plot(ax2,rq,vq,...
+            'o','MarkerSize',5,'MarkerFaceColor','white','MarkerEdgeColor','black');
+    end
+    pause(.5);
+    
     str = ['Time =',num2str(obj.timeData(i*obj.Ns*NPulses*txN)),'s'];
     str2 = ['Range-Doppler Processing Time = ',num2str(t1), ' s'];
     str3 = ['Range-Doppler Processing Time =',num2str(t2), ' s'];

@@ -28,6 +28,7 @@ classdef realTimeProcessing
        theta
        steeringVectorMatrix
        %------------------------------------------------------------------
+       R_plot; 
    end
    properties (Constant)
        %Physical Constants 
@@ -51,22 +52,22 @@ classdef realTimeProcessing
            %Information for Signal Processing
            obj.theta = data.theta; 
            obj.steeringVectorMatrix = data.steeringVectorMatrix; 
+           % For tracking
+           freq =0:1/(obj.sR*obj.Ns):(obj.Ns-1)/(obj.Ns*obj.sR);
+           obj.R_plot = obj.c*freq/(obj.k*2);
        end
        % TO BE CHANGED SO THAT IT CAN BE DONE IN REAL TIME!
-       function [s,R] = ranging(obj)
-           %signal_time = obj.signal.rxSignal(); 
-           %s_t = zeros(1,obj.rxN,obj.Ns); 
-           %for txi = 1:obj.txN
-           %   s_t(txi,:,:) = signal_time(txi,:,(1+(txi-1)*obj.Ns):1:txi*obj.Ns); 
-           %end
-           %s = fft(s_t,[],3);           
-           %freq =0:1/(obj.sR*obj.Ns):(obj.Ns-1)/(obj.Ns*obj.sR);
-           %R = obj.c*freq/(obj.k*2);
-       end
+       function [s,R] = ranging(obj,i)
+           Nts = obj.Ns; 
+           signal_time = obj.signalData(:,:,1:Nts,i); 
+           s = fft(signal_time,[],3);           
+           freq =0:1/(obj.sR*Nts):(Nts-1)/(Nts*obj.sR);
+           R = obj.c*freq/(obj.k*2);
+          end
 %-----------Range and Azimuth profile------------------------------------%
        function [sout,R_plot,theta_plot] = rangeAzimuth(obj,i)
            %Init
-           Nts = obj.Ns*obj.txN; 
+           Nts = obj.Ns; 
            thetaN = size(obj.theta,2);
            %Signal selection         
            [signal_time] = obj.signalData(:,:,1:Nts,i); 
@@ -77,7 +78,7 @@ classdef realTimeProcessing
            for thetai = 1:thetaN 
               sM = obj.steeringVectorMatrix(:,:,thetai);
               sM = repmat(sM,1,1,Nts); 
-              s1 = s.*sM;
+              s1 = s.*sM; 
               s1 = sum(s1,1); 
               s1 = sum(s1,2); 
               sout(thetai,:) = reshape(s1,1,Nts); 
@@ -90,7 +91,7 @@ classdef realTimeProcessing
 %------Doppler Ranging--------------------------------------------------%
        function [s,v_plot,R_plot] = dopplerRange(obj,i)
            %init
-           signalN = obj.Ns*obj.txN;
+           signalN = obj.Ns;
            %signl selection
            s  = obj.signalData(:,:,:,i); 
            %fast time fft                 
@@ -100,7 +101,7 @@ classdef realTimeProcessing
            end
            %slow time fft
            for i = 1:signalN
-               index = i:(signalN):obj.NPulses*signalN;
+               index = i:(signalN*obj.txN):obj.NPulses*signalN*obj.txN;
                s(:,:,index) = fftshift(fft(s(:,:,index),[],3),3); 
            end
            %variables for plotting
@@ -113,16 +114,117 @@ classdef realTimeProcessing
  %-----For Doppler vs Time Plot------------------------------------------%
        function [s] = dopplerOnly(obj,i) 
            %init
-           signalN = obj.Ns*obj.txN;
+           signalN = obj.Ns;
            %signal selection 
            signal  = obj.signalData(:,:,:,i);
            %slow time fft 
            s = zeros(obj.txN,obj.rxN,obj.NPulses); 
            for i = 1:signalN 
-               index = i:(signalN):obj.NPulses*signalN;
+               index = i:(signalN*obj.txN):obj.NPulses*signalN*obj.txN;
                temp = fftshift(fft(signal(:,:,index),[],3),3); 
                s = s + abs(temp); 
            end         
        end
-   end 
+       %--------------- Detection algorithms ---------------------------------%
+       function [index] = detectRange(obj,st)
+           Nts = obj.Ns; 
+           %st = sum(signal,1); 
+           %st = sum(st,2); 
+           st = reshape(st(1,1,:),1,Nts); 
+           [a,b] = findpeaks(abs(st)); 
+           detection = a > 30; 
+           index = find(detection);
+           index = b(index); 
+       end
+       function [out] = detectAzimuth(obj,signal,index_r)
+           st = signal(:,index_r);
+           counter = 1; 
+           for i = 1:max(size(index_r))
+               [a,b] = findpeaks(abs(st(:,i)));
+               detection = a >80;
+               index = find(detection);
+
+               if size(index,1) > 0
+                   for j = 1:max(size(index))
+                       out(counter,:) = [index_r(i),b(index(j))];
+                       counter = counter+1;
+                   end
+               end
+           end
+       end 
+       function [out] = detectDoppler(obj,signal,index_r)
+           st = signal(index_r,:);
+           counter = 1;
+           for i = 1:max(size(index_r))
+               [a,b] = findpeaks(abs(st(i,:)));
+               detection = a >750;
+               index = find(detection);
+               
+               if size(index,1) > 0
+                   for j = 1:max(size(index))
+                       out(counter,:) = [index_r(i),b(index(j))];
+                       counter = counter+1;
+                   end
+               end
+           end
+           
+       end
+%---------------------------Functions for Tracking--------------------%
+       function [out] = detectAzimuth2(obj,signal,index_r)
+           st = signal(:,index_r);
+           counter = 1; 
+           for i = 1:max(size(index_r))
+               [a,b] = findpeaks(abs(st(:,i)));
+               detection = a >80;
+               index = find(detection);
+
+               if size(index,1) > 0
+                   for j = 1:max(size(index))
+                       out_index(counter,:) = [index_r(i),b(index(j))];
+                       az_index(counter) = b(index(j)); 
+                       index_r2(counter) = index_r(i); 
+                       counter = counter+1;
+                   end
+                  
+               end
+           end
+           N = min(size(out_index));
+           
+           for j = 1:N
+               out(1,j) = obj.R_plot(index_r2(j)) *sin(obj.theta(az_index(j))); 
+               out(2,j) =  obj.R_plot(index_r2(j)) *cos(obj.theta(az_index(j))); 
+           end
+           
+       end 
+%------------Kalman Filter -------------------------------------------%
+       function [X,P] = kalmanF(obj,zk,X,P,deltaT)
+           %extract
+           z = [zk(1)*sin(zk(2));zk(1)*cos(zk(2))];
+           R = [0.5^2,0;0,0.5^2];
+           %Observation Matrix
+           H = [1,0,0,0;0,1,0,0];
+           
+           %State transition matrix
+           A = [1 0 deltaT 0
+               0 1 0 deltaT
+               0 0 1 0
+               0 0 0 1];
+           %State Prediction
+           X = A*X;
+           %Error Covariance Prediction
+           P = A*P*transpose(A);
+           %Weights
+           K = P*transpose(H)/(H*P*transpose(H)+R);
+           %New estimates
+           X = X + K*(z-H*X);
+           %X = X + K*(z-H*X);
+           %Error Covariance
+            P = P -K*H*P; 
+
+       end
+       
+       
+       
+       
+   end
 end
