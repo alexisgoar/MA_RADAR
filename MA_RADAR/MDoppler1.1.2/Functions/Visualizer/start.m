@@ -22,6 +22,9 @@ txN = obj.signal.tx.numberofElements;
 signalN = obj.signal.tx.samplesPerChirp*txN;
 ax1 = axes('Position',[0.15 0.5 0.7 0.45]);
 hold on;
+axis(ax1,[-80 80    0  100]);
+colorbar; 
+caxis([0 1]);
 
 
 

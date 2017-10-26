@@ -68,7 +68,7 @@ classdef signal < handle
             end
             x_tx = reshape(repmat(x_tx,1,rxN),txN,rxN);
             x_rx = reshape(repmat(x_rx,txN,1),txN,rxN);
-            obj.x_ij = abs(x_tx+x_rx)/2;
+            obj.x_ij = (x_tx+x_rx)/2;
             %time init
             obj.time = 0; 
             %time two is used for testing micro doppler spectra
@@ -106,6 +106,8 @@ classdef signal < handle
                 %add all contributions
                 s = s+exp(1i*(t1+t2+t3+t4))+noise; 
             end
+            %Normalize 
+            s = s/targetN; 
             %Prepare the signal for export 
             signal = zeros(size(time_points)); 
             for i=1:txN 
@@ -148,7 +150,7 @@ classdef signal < handle
         %Assumes that the elements of both receiver and transmitter are the
         %same for the y and z components
         function sM = steeringVectorMatrix(obj,theta)
-           sM = exp(-1i*4*pi*obj.x_ij*sin(theta)/obj.tx.lambda);  
+           sM = exp(1i*4*pi*obj.x_ij*sin(theta)/obj.tx.lambda);  
         end
         %%%% TIME FUNCTIONS %%%%%%
         function update_deltaT(obj)

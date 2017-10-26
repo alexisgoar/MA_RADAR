@@ -20,7 +20,7 @@ str3 = ['Range-Doppler Processing Time\n',num2str(0), ' s'];
 txt3 = uicontrol('Style','text',...
     'Position',[10 520 120 40],...
     'String',str3);
-str4 = ['In development: tracking:   ',num2str(0), ' s'];
+str4 = ['Tracking:   ',num2str(0), ' s'];
 txt4 = uicontrol('Style','text',...
     'Position',[10 460 120 40],...
     'String',str4);
@@ -28,20 +28,28 @@ txt4 = uicontrol('Style','text',...
 ax1 = axes('Position',[0.15 0.5 0.7 0.45]);
 xlabel(ax1,'Horizontal Range [m]');
 ylabel(ax1,'Vertical Range [m]'); 
-colorbar;
-caxis([0 250]);
+axis(ax1,[-80 80    0  100]);
+colorbar; 
+caxis([0 0.2]);
 hold on;
+view(0, 90)
+% Ax 2
 ax2 = axes('Position',[0.15 0.05 0.33 0.35]);
 xlabel(ax2, 'Range [m]'); 
-ylabel(ax2, 'Range-Rate [m/s]'); 
-colorbar; 
+ylabel(ax2, 'Range-Rate [m/s]');  
 caxis([0,1000]); 
+colorbar; 
 hold on;
+axis(ax2,[0 80  -15  15]);
+view(0, 90)
+% Ax 3 
 ax3 = axes('Position',[0.52 0.05 0.33 0.35]);
 title(ax3,' Tracking'); 
 xlabel(ax3, 'Horizontal Range [m]'); 
 ylabel(ax3, 'Vertical Range [m]'); 
+colorbar; 
 hold on;
+axis(ax3,[-80 80    0  120]);
 %Start visualizer
 f.Visible = 'on';
 %----------------------Init-----------------------------------------------%
@@ -73,11 +81,12 @@ P = [1,0,0,0;0,1,0,0;0,0,0,0;0,0,0,0];
 deltaT = obj.tc*NPulses*txN;
 aT = allTracks(deltaT); 
 
+profile on 
 while t <10000
     %Clear axes
     cla(ax1)
     cla(ax2)
-    %cla(ax3)
+    cla(ax3)
     %----------------------Range Azimuth---------------------------------%
     %Processing and performance measurement
     t01 =tic;
@@ -85,9 +94,9 @@ while t <10000
     t1 = toc(t01);
     %Plot result
     h = pcolor(ax1,r.*sin(theta),r.*cos(theta),abs(s_RA));
-    view(0, 90)
+
     set(h,'edgecolor','none');
-    axis(ax1,[-80 80    0  100])
+
     %Plot true tagets
     for j = 1:targetsN
         plot(ax1,trueRange(i*signalN*NPulses*txN,1,j),trueRange(i*signalN*NPulses*txN,2,j),...
@@ -96,7 +105,7 @@ while t <10000
     %Detection
     s_range = obj.ranging(i);
     index = obj.detectRange(s_range);
-    [out] = obj.detectAzimuth(s_RA,index);
+    [out] = obj.detectAzimuth(s_RA,index); 
     %Plot detected targets
     for j = 1:size(out,1)
         rq = r(1,out(j,1));
@@ -117,8 +126,8 @@ while t <10000
     temp = reshape(s2(1,1,index_end),signalN,NPulses);
     % Plot result
     pcolor(ax2,r_plot,v_plot,abs(temp));
-    axis(ax2,[0 80  -15  15])
-    view(0, 90)
+
+
     % Plot true targets
     for j = 1:targetsN
         range = sqrt(trueRange(i*signalN*NPulses*txN,1,j)^2+trueRange(i*signalN*NPulses*txN,2,j)^2);
@@ -126,53 +135,30 @@ while t <10000
             'o','MarkerSize',5,'MarkerFaceColor','red','MarkerEdgeColor','black');
     end
     %Detection
-    [out2] = obj.detectDoppler(temp,index);
+    
+    %[out2] = obj.detectDoppler(temp,index);
     % Plot detected targets
-    for j = 1:size(out2,1)
-        rq = r(1,out2(j,1));
-        vq = v_plot(1,out2(j,2));
-        plot(ax2,rq,vq,...
-            'o','MarkerSize',5,'MarkerFaceColor','white','MarkerEdgeColor','black');
-    end
+    %for j = 1:size(out2,1)
+    %    rq = r(1,out2(j,1));
+    %    vq = v_plot(1,out2(j,2));
+    %    plot(ax2,rq,vq,...
+    %        'o','MarkerSize',5,'MarkerFaceColor','white','MarkerEdgeColor','black');
+    %end
     % Update performance estimator
     str3 = ['Range-Doppler Processing Time =',num2str(t2), ' s'];
     txt3.set('String',str3);
-    
-    %--------------------TRACKING (TESTING)-----------------------------------%
-    deltaT = obj.tc*NPulses*txN; 
-    rK = r(1,out2(1,1));
-    azK = theta(out(1,2),1);
-    rrK = v_plot(1,out2(1,1)); 
-
-    zk = [rK,azK]; 
-    if i == 1
-    x = [rK*sin(azK)
-        rK*cos(azK)
-        3
-        0]; 
-    else
-   
-    [x,P] = obj.kalmanF(zk,x,P,deltaT);
-
-    end
-
     %--------TRACKING (NEW)-----------------------------------------------%
-    
+    t04 = tic; 
     detections = obj.detectAzimuth2(s_RA,index); 
+    aT.read(detections);     
+    t4 = toc(t04); 
+    aT.plotTracks(ax3);
 
-    aT.read(detections);
-    
-        
-    plot(ax3,aT.tracks(1).x_est,aT.tracks(1).y_est,...
-        'o','MarkerSize',5,'MarkerFaceColor','red','MarkerEdgeColor','none');
-    plot(ax3,aT.tracks(2).x_est,aT.tracks(2).y_est,...
-        'o','MarkerSize',5,'MarkerFaceColor','green','MarkerEdgeColor','none');
-    axis(ax3,[-80 80    0  80])
-
-   
+    str4 = ['Tracking:   ',num2str(t4), ' s'];
+    txt4.set('String',str4);
    
     %-------------------Next time step----------------------------------------%
-    pause(.0000003);
+    pause(0);
     str = ['Time =',num2str(obj.timeData(i*obj.Ns*NPulses*txN)),'s'];
     txt.set('String',str);
     t = t +obj.tc*NPulses*txN;

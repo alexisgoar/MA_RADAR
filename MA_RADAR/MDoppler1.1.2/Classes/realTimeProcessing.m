@@ -60,7 +60,7 @@ classdef realTimeProcessing
        function [s,R] = ranging(obj,i)
            Nts = obj.Ns; 
            signal_time = obj.signalData(:,:,1:Nts,i); 
-           s = fft(signal_time,[],3);           
+           s = fft(signal_time,[],3)/size(signal_time,3);           
            freq =0:1/(obj.sR*Nts):(Nts-1)/(Nts*obj.sR);
            R = obj.c*freq/(obj.k*2);
           end
@@ -70,19 +70,30 @@ classdef realTimeProcessing
            Nts = obj.Ns; 
            thetaN = size(obj.theta,2);
            %Signal selection         
-           [signal_time] = obj.signalData(:,:,1:Nts,i); 
+
+           %[signal_time2] = obj.signalData(:,:,(Nts+1):2*Nts,i);
            % Fast time fft 
-           s = fft(signal_time,[],3);
+           %s = fft(signal_time,[],3);
+           %s2 = fft(signal_time2,[],3);
+
            % Multiplication with steering vectors 
-           sout = zeros(thetaN,Nts);
+         
+           for txi = 1:obj.txN
+               [signal_time] = obj.signalData(:,:,((txi-1)*Nts+1):txi*Nts,i);
+               s = fft(signal_time,[],3)/size(signal_time,3);
+               sout = zeros(thetaN,Nts);
            for thetai = 1:thetaN 
               sM = obj.steeringVectorMatrix(:,:,thetai);
               sM = repmat(sM,1,1,Nts); 
               s1 = s.*sM; 
               s1 = sum(s1,1); 
               s1 = sum(s1,2); 
-              sout(thetai,:) = reshape(s1,1,Nts); 
+              sout_temp(thetai,:) = reshape(s1,1,Nts); 
            end
+          sout = sout + sout_temp; 
+          sout = sout/(obj.txN*obj.rxN); 
+           
+           end 
            %Variables for plotting          
            freq =0:1/(obj.sR*Nts):(Nts-1)/(Nts*obj.sR);
            R = obj.c*freq/(obj.k*2);
@@ -128,20 +139,18 @@ classdef realTimeProcessing
        %--------------- Detection algorithms ---------------------------------%
        function [index] = detectRange(obj,st)
            Nts = obj.Ns; 
-           %st = sum(signal,1); 
-           %st = sum(st,2); 
            st = reshape(st(1,1,:),1,Nts); 
-           [a,b] = findpeaks(abs(st)); 
-           detection = a > 30; 
-           index = find(detection);
-           index = b(index); 
+           [a,b] = findpeaks(abs(st));
+           detection = a > 0.1; 
+           index = b(detection); 
        end
        function [out] = detectAzimuth(obj,signal,index_r)
            st = signal(:,index_r);
            counter = 1; 
+           if isempty(index_r) == 0  
            for i = 1:max(size(index_r))
                [a,b] = findpeaks(abs(st(:,i)));
-               detection = a >80;
+               detection = a >0.1;
                index = find(detection);
 
                if size(index,1) > 0
@@ -151,10 +160,17 @@ classdef realTimeProcessing
                    end
                end
            end
+           if exist('out') == 0
+              out = [];  
+           end
+           else
+               out = []; 
+           end
        end 
        function [out] = detectDoppler(obj,signal,index_r)
            st = signal(index_r,:);
            counter = 1;
+           if isempty(index_r) == 0 
            for i = 1:max(size(index_r))
                [a,b] = findpeaks(abs(st(i,:)));
                detection = a >750;
@@ -167,15 +183,19 @@ classdef realTimeProcessing
                    end
                end
            end
+           else
+               out = []; 
+           end
            
        end
 %---------------------------Functions for Tracking--------------------%
        function [out] = detectAzimuth2(obj,signal,index_r)
            st = signal(:,index_r);
            counter = 1; 
+           if isempty(index_r) == 0 
            for i = 1:max(size(index_r))
                [a,b] = findpeaks(abs(st(:,i)));
-               detection = a >80;
+               detection = a >0.07;
                index = find(detection);
 
                if size(index,1) > 0
@@ -188,13 +208,19 @@ classdef realTimeProcessing
                   
                end
            end
-           N = min(size(out_index));
+           if exist('out_index') == 0
+               out = []; 
+               return; 
+           end
+           N = size(out_index,1);
            
            for j = 1:N
                out(1,j) = obj.R_plot(index_r2(j)) *sin(obj.theta(az_index(j))); 
                out(2,j) =  obj.R_plot(index_r2(j)) *cos(obj.theta(az_index(j))); 
            end
-           
+           else
+               out = []; 
+           end
        end 
 %------------Kalman Filter -------------------------------------------%
        function [X,P] = kalmanF(obj,zk,X,P,deltaT)

@@ -1,4 +1,4 @@
- function M = suboptimal1(M) 
+ function M_logic = suboptimal1(M) 
      %Page 95 of Book: Multiple Target Tracking with Radar Applications
      n = size(M,1);
      m = size(M,2);
@@ -43,16 +43,17 @@ while execute
      end
      M = M_logic.*M; 
      execute = sum(sum(M_logic_compare ~= M_logic));
-     % 3. and 4
+     % 3. and 4 (repeat 1 and 2)
 end
-
-% Doesn Work from here: CORRECT!!!
-     %5
+     %5 For still multiple validated tracks, select the measurement with
+     %lower distance
      sM_logic = sum(M_logic,2);
      counter = 1; 
      for i = 1:n 
         if sM_logic(i) > 1 
-           [~,j]= min(M_logic(i,:)); 
+            vec = M(i,:); 
+            vec(vec == 0) = NaN; 
+           [~,j]= min(abs(vec)); 
            index_One3(:,counter) = sub2ind([n m],i,j); 
            index_Zero3(counter) = i; 
            counter = counter+1; 
@@ -62,25 +63,28 @@ end
      if flag3
          M_logic(index_Zero3,:) = 0 ;
          M_logic(index_One3) = 1;
+         M = M_logic.*M;
      end
-     %6
+     %6 For still multiple validated measurements, assign to the track with
+     %the least distance 
      sM_logic = sum(M_logic,1);
      counter = 1; 
      for j = 1:m 
         if sM_logic(j) > 1 
-           [~,i] = min(M_logic(:,j)); 
+            vec = M(:,j);
+            vec(vec ==0 ) = NaN; 
+           [~,i] = min(abs(vec)); 
            index_One4(:,counter) = sub2ind([n m],i,j);
            index_Zero4(counter) = j; 
            counter = counter+1; 
            flag4 = 1; 
-           i 
-           j
+
         end
      end
      if flag4
          M_logic(:,index_Zero4) = 0 ;
          M_logic(index_One4) = 1;
+         M = M_logic.*M;
      end
-     M_logic
-     M = M_logic.*M;
+
  end
