@@ -53,7 +53,7 @@ end
         if sM_logic(i) > 1 
             vec = M(i,:); 
             vec(vec == 0) = NaN; 
-           [~,j]= min(abs(vec)); 
+           [~,j]= min((vec)); 
            index_One3(:,counter) = sub2ind([n m],i,j); 
            index_Zero3(counter) = i; 
            counter = counter+1; 
@@ -73,7 +73,7 @@ end
         if sM_logic(j) > 1 
             vec = M(:,j);
             vec(vec ==0 ) = NaN; 
-           [~,i] = min(abs(vec)); 
+           [~,i] = min((vec)); 
            index_One4(:,counter) = sub2ind([n m],i,j);
            index_Zero4(counter) = j; 
            counter = counter+1; 

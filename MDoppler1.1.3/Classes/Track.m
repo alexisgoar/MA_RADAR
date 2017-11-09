@@ -33,7 +33,7 @@ classdef Track < handle
     end
     properties (Constant) 
        % Kalman Filter COnstants
-       R = [2^2,0;0,2^2]; 
+       R = [0.5^2,0.0;0.0,0.5^2]; 
        H = [1,0,0,0;0,1,0,0]; 
     end
     methods
@@ -55,7 +55,7 @@ classdef Track < handle
                     0 1 0 deltaT
                     0 0 1 0
                     0 0 0 1];
-                obj.Q = [0,0,0,0;0,0,0,0;0,0,0,0;0,0,0,0];
+                obj.Q = [0,0,0,0;0,0,0,0;0,0,8,0;0,0,0,8];
                 %Gates
                 obj.Gx = 3*sqrt(obj.P(1,1)+obj.R(1,1));
                 obj.Gy = 3*sqrt(obj.P(2,2)+obj.R(2,2));
@@ -143,12 +143,18 @@ classdef Track < handle
             obj.S = obj.H*obj.P*transpose(obj.H)+obj.R;
 
             
-                        %track hisotry
+            %track hisotry
             obj.i = obj.i+1;
             obj.x_hist(obj.i) = obj.x_est;
             obj.y_hist(obj.i) = obj.y_est;
             obj.Np = obj.Np +1 ;
 
+            % velocity init
+            if obj.Np == 2
+               obj.X(3) = (obj.x_hist(2)-obj.x_hist(1))/obj.deltaT; 
+               obj.X(4) = (obj.y_hist(2)-obj.y_hist(1))/obj.deltaT; 
+            end
+            
             % track deletion
             if (obj.flag == 0)
                 obj.Nmc = 0;
@@ -170,7 +176,7 @@ classdef Track < handle
         function plotTrack(obj,axes) 
 
            if obj.i > 6
-               plot(axes,obj.x_hist(1:obj.i),obj.y_hist(1:obj.i),'o','MarkerSize',5,'MarkerFaceColor',obj.color,'MarkerEdgeColor','none') ; 
+               plot(axes,obj.x_hist(6:obj.i),obj.y_hist(6:obj.i),'o','MarkerSize',5,'MarkerFaceColor',obj.color,'MarkerEdgeColor','none') ; 
            end
         end
     end

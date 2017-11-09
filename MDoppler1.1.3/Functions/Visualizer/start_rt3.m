@@ -28,55 +28,75 @@ txt4 = uicontrol('Style','text',...
 ax1 = axes('Position',[0.15 0.5 0.7 0.45]);
 xlabel(ax1,'Horizontal Range [m]');
 ylabel(ax1,'Vertical Range [m]'); 
-%axis(ax1,[-80 80    0  100]);
+axis(ax1,[-20 20    0  20]);
 colorbar; 
-caxis([0 0.2]);
+%caxis([0.15 0.5]);
 hold on;
 view(0, 90)
 % Ax 2
 ax2 = axes('Position',[0.15 0.05 0.33 0.35]);
 xlabel(ax2, 'Range [m]'); 
 ylabel(ax2, 'Range-Rate [m/s]');  
-%caxis([0,1000]); 
-colorbar; 
+caxis([0.15 0.3]);
+colorbar;
 hold on;
-%axis(ax2,[0 80  -15  15]);
+axis(ax2,[-4 4  0  5]);
 view(0, 90)
-% Ax 3 
+% Ax 3
 ax3 = axes('Position',[0.52 0.05 0.33 0.35]);
-title(ax3,' Tracking'); 
-xlabel(ax3, 'Horizontal Range [m]'); 
-ylabel(ax3, 'Vertical Range [m]'); 
-colorbar; 
+title(ax3,' Tracking');
+xlabel(ax3, 'Horizontal Range [m]');
+ylabel(ax3, 'Vertical Range [m]');
+colorbar;
 hold on;
-axis(ax3,[-80 80    0  120]);
+axis(ax3,[-20 20    0  10]);
 %Start visualizer
 f.Visible = 'on';
 %----------------------Init-----------------------------------------------%
+deltaT = 0.27;
+aT = allTracks(deltaT);
 
-ii = 1; 
+ii = 1;
 while ii <= obj.nCycles
-    cla(ax1); 
-    cla(ax2); 
-%% Ranging
-    %s_range = obj.range(1,1,ii); 
-
-    %plot(ax1,obj.rLin,abs(s_range)); 
-
+    cla(ax1);
+    cla(ax2);
+    cla(ax3);
+    %% Range Azimuth Plot
+    s_azimuth = obj.rangeAzimuth(1,ii);
+    [theta,R] = meshgrid(obj.thetaLin,obj.rLin);
+    h = pcolor(ax1,R.*sin(theta),R.*cos(theta),abs(s_azimuth));
+    set(h,'edgecolor','none');
+    detections= obj.detectAzimuth(ii);
+    for r_i = 1:size(detections,2)
+        r = detections(1,r_i);
+        th = detections(2,r_i);
+        
+        plot(ax3,r*sin(th),r*cos(th),...
+            'o','MarkerSize',5,'MarkerFaceColor','red','MarkerEdgeColor','black');
+        plot(ax1,r*sin(th),r*cos(th),...
+           'o','MarkerSize',5,'MarkerFaceColor','white','MarkerEdgeColor','black');
+    end
     
+    %% Doppler Range Plot
     s_doppler = obj.dopplerRange(1,ii);
-    [v,R]= meshgrid(obj.vLin,obj.rLin); 
-    h = pcolor(ax2, v,R,abs(s_doppler)); 
+    [v,R]= meshgrid(obj.vLin,obj.rLin);
+    h = pcolor(ax2, v,R,abs(s_doppler));
     set(h,'edgecolor','none');
     
-    s_azimuth = obj.rangeAzimuth(1,ii); 
-    [theta,R] = meshgrid(obj.thetaLin,obj.rLin); 
-    h = surf(ax1,R.*sin(theta),R.*cos(theta),abs(s_azimuth)); 
-    set(h,'edgecolor','none');
+
     
+    %% Tracking
+    if isempty(detections) == 0
+        detections2 = [detections(1,:).*sin(detections(2,:)); detections(1,:).*cos(detections(2,:))];
+        %detections2 = detections2(:,1); 
+    else
+        detections2 = []; 
+    end
+    aT.read(detections2);
+    aT.plotTracks(ax3);
     drawnow;
     
-    ii = ii+1; 
+    ii = ii+1;
 end
 
 

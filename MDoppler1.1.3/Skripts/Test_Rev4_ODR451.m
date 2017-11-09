@@ -8,7 +8,7 @@ delete(instrfind);
 
 %port = 'COM24';
 %s = SensorSerialInterface(port);
-sensorIP = '192.168.23.38';
+sensorIP = '192.168.23.35';
 
 % parameter
 

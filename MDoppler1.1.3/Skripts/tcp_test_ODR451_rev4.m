@@ -1,6 +1,6 @@
 %%
 
-sensorIP = '192.168.23.38';
+sensorIP = '192.168.23.35';
 sensorPort = 8888;
 
 swOrder = [1:24];
@@ -24,9 +24,10 @@ figure;
 set(gcf,'position',get(gcf,'position').*[.5 1 2 1]);
 btn = uicontrol('style','togglebutton','value',1,'position',[0 0 20 20],'string','X');
 
-tic
+
 ii=1;
 while get(btn,'value')
+    tic
     d = s.fetchSingleSnapshot();
     dd = reshape(d, numRxChannels, []);
     dd = permute(dd, [2 1]);
@@ -58,8 +59,9 @@ while get(btn,'value')
 
     disp(ii)
     ii = ii+1;
+    toc
 end
-toc
+
 
 %%
 s.close();

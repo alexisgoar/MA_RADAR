@@ -26,7 +26,7 @@ classdef realTimeProcessing_ODR451
    methods
        %% Constructor function
        function obj = realTimeProcessing_ODR451(input)
-           obj.signalData = input.data;
+           obj.signalData = input.raw_data;
            obj.nUp = size(obj.signalData,1);
            obj.numTxChannels = size(obj.signalData,2);
            obj.numRxChannels = size(obj.signalData,3);
@@ -40,7 +40,7 @@ classdef realTimeProcessing_ODR451
            obj.steeringVector = zeros(obj.numRxChannels,obj.ntheta); 
            for i = 1:obj.numRxChannels
                for j = 1:obj.ntheta
-                   obj.steeringVector(i,j) = exp(1i*pi*(1-i)*sin(obj.thetaLin(j))); 
+                   obj.steeringVector(i,j) = exp(-1i*pi*(1-i)*sin(obj.thetaLin(j))); 
                end
            end
        end
@@ -49,6 +49,13 @@ classdef realTimeProcessing_ODR451
            signal  = obj.signalData(:,txi,rxi,cyclei); 
            s = fft(signal,obj.nfft,1)./size(signal,1);
            s = s(1:end/2+1,:,:); 
+       end
+       %% Range Detection 
+       function [index] = detectRange(obj,cyclei)
+           s = obj.range(1,1,cyclei); 
+           [a,b] = findpeaks(abs(s)); 
+           detection = a> 0.10; 
+           index = b(detection); 
        end
        %% Doppler Ranging 
        function s = dopplerRange(obj,rxi,cyclei) 
@@ -74,11 +81,50 @@ classdef realTimeProcessing_ODR451
           %Azimuth profile 
           for thetai = 1:obj.ntheta
              sV = obj.steeringVector(:,thetai);  
-             sV = transpose(sV) ; 
+             sV = sV' ; 
              sV = repmat(sV,1,1,obj.nfft/2+1);
              sV = permute(sV,[3 2 1]); 
              s_out(:,thetai) =sum(sV.*s,2); 
           end
        end
+       %% MUSIC Algorithm, test
+       function s_out = MUSIC(obj,txi,cyclei) 
+           index_r = obj.detectRange(cyclei);
+           s = obj.signalData(:,txi,:,cyclei);
+           s = squeeze(s);
+           s = fft(s,obj.nfft,1)./size(s,1);
+           for signali = 1:obj.nfft/2+1
+               s2 = transpose(s(signali,:,:));
+               s2 = corrcoef(s2*s2');
+               [V,D] = eig(s2);
+               [D I] = sort(diag(D),'descend');
+               V = V(:,I);
+               U_n = V(:,2:end);
+               for thetai = 1:obj.ntheta
+                   sV = obj.steeringVector(:,thetai);
+                   a = sV'*U_n*U_n'*sV;
+                   s_out(signali,thetai) = sV'*sV/a;
+               end
+           end 
+       end
+       %% Azimuth Detection 
+       function [detections] = detectAzimuth(obj,cyclei)
+           index_r = obj.detectRange(cyclei); 
+           index_rA = []; 
+           s = obj.rangeAzimuth(1,cyclei); 
+           counter = 1; 
+           for i = 1:size(index_r,1)
+               [a,b] = findpeaks(abs(s(index_r(i),:))); 
+               detection = a > 0.4; 
+               index = find(detection); 
+               c = repmat(index_r(i),size(index)); 
+               index_rA = [index_rA [c;b(index)]];     
+           end 
+           if isempty(index_rA) == 0
+               detections = [obj.rLin(index_rA(1,:)); obj.thetaLin(index_rA(2,:))];
+           else
+               detections = [];     
+           end
+       end 
    end
 end
